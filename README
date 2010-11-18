@@ -1,0 +1,37 @@
+=====================================
+  About:
+=====================================
+
+GTK Webkit based browser written in Vala.
+
+Based on the Vala Webkit example code found here:
+  http://live.gnome.org/Vala/WebKitSample
+
+
+=====================================
+  Compiling:
+=====================================
+
+Use the following:
+
+  valac --pkg gtk+-2.0 --pkg webkit-1.0 --thread winks.vala
+
+
+=====================================
+  Usage:
+=====================================
+
+Basic usage (keys!):
+
+b = back
+f = forward
+r = refresh
+u = url bar
+
+- - - - -
+
+Information:
+
+The url bar can take urls in usual formats, adding http://
+as required. If you type search terms into it, it will
+search google with them.
