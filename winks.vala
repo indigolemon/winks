@@ -1,3 +1,11 @@
+/*
+* winks.vala - Lightweight Browser
+*
+* Copyright (C) 2010 Graham Thomson <graham.thomson@gmail.com>
+* Released under the GNU General Public License (GPL) version 2.
+* See COPYING
+*/
+
 using Gtk;
 using WebKit;
 
@@ -6,6 +14,7 @@ public class winks: Window {
     private const string TITLE = "winks";
     private const string HOME_URL = "http://www.google.co.uk/";
     private const string DEFAULT_PROTOCOL = "http";
+    private const string VERSION_STRING = "Winks 0.01a"; 
 
     private Regex protocol_regex;
     private Regex search_check_regex;
@@ -37,13 +46,18 @@ public class winks: Window {
         this.scrolled_window = new ScrolledWindow (null, null);
         this.scrolled_window.set_policy (PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
         this.scrolled_window.add (this.web_view);
-        this.status_bar = new Label ("winks v0.01");
-        this.status_bar.xalign = 0;
-        var vbox = new VBox (false, 0);
-        vbox.pack_start (this.url_bar, false, true, 0);
-        vbox.add (scrolled_window);
-        vbox.pack_start (this.status_bar, false, true, 0);
-        add (vbox);
+        this.status_bar = new Label ("Welcome to "+VERSION_STRING);
+        this.status_bar.xalign = 1;
+        this.status_bar.xpad = 5;
+        this.status_bar.set_single_line_mode (true);
+        this.url_bar.set_width_chars (50);
+        var top_bar = new HBox (false, 0);
+        top_bar.add (this.url_bar);
+        top_bar.add (this.status_bar);
+        var main_area = new VBox (false, 0);
+        main_area.pack_start (top_bar, false, true, 0);
+        main_area.add (this.scrolled_window);
+        add (main_area);
     }
 
     private void connect_signals () {
@@ -60,26 +74,51 @@ public class winks: Window {
     }
 
     private bool ProcessKeyPress( Gdk.EventKey KeyPressed ) {
-        this.status_bar.set_text ("Keypress: "+KeyPressed.str);
+        string performed_action = "";
         switch (KeyPressed.str) {
             case "r":
+            case "R":
                 this.web_view.reload ();
+                performed_action = "Page reloaded";
             break;
 
             case "b":
-                if (this.web_view.can_go_back ())
+            case "B":
+                if (this.web_view.can_go_back ()){
                     this.web_view.go_back ();
+                    performed_action = "Gone Back 1 Page";
+                }
             break;
 
             case "f":
-                if (this.web_view.can_go_forward ())
+            case "F":
+                if (this.web_view.can_go_forward ()){
                     this.web_view.go_forward ();
+                    performed_action = "Gone Forward 1 Page";
+                }
+            break;
+
+            case "h":
+            case "H":
+                this.web_view.open (winks.HOME_URL);
+                performed_action = "Homepage Loaded";                
             break;
 
             case "u":
+            case "U":
                 this.url_bar.grab_focus ();
+                performed_action = "Edit URL and hit Enter";
+            break;
+
+            case "i":
+            case "I":
+                this.url_bar.text = "";
+                this.url_bar.grab_focus ();
+                performed_action = "Type URL and hit Enter";
             break;
         }
+        if (performed_action.length > 0)
+            this.status_bar.set_text (performed_action+" | "+VERSION_STRING);
         return true;
     }
 

@@ -7,6 +7,11 @@ GTK Webkit based browser written in Vala.
 Based on the Vala Webkit example code found here:
   http://live.gnome.org/Vala/WebKitSample
 
+Coding by Graham Thomson <graham.thomson@gmail.com>
+
+Released Under the GNU General Public License (GPL) version 2
+See COPYING
+
 
 =====================================
   Compiling:
@@ -21,12 +26,13 @@ Use the following:
   Usage:
 =====================================
 
-Basic usage (keys!):
+Basic usage (case insensitive):
 
 b = back
 f = forward
 r = refresh
-u = url bar
+u = activate url bar
+i = clear then activate the url bar
 
 - - - - -
 
