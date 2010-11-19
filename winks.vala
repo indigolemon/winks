@@ -109,7 +109,7 @@ public class winks: Window {
 				
 				var browser = new winks ();
 
-				if (args[1].length > 0) {
+				if (args[1] != null) {
 					browser.start (args[1]);	
 				} else {
 					browser.start (winks.HOME_URL);
