@@ -21,10 +21,18 @@ Use the following:
 
   valac --pkg gtk+-2.0 --pkg webkit-1.0 --thread winks.vala
 
+or in the project folder, simply run:
+
+  ./build
 
 =====================================
   Usage:
 =====================================
+
+Start the application by running ./winks, or simply winks
+if you have placed it in your path. Optionally, you may
+pass a url as an argument. Note that this url must be 
+complete for this to work.
 
 Basic usage (case insensitive):
 
@@ -33,6 +41,13 @@ f = forward
 r = refresh
 u = activate url bar
 i = clear then activate the url bar
+
+Using 'i' and clearing the url bar also enables you to issue
+commands. Commands are prefixed by a colon (:).
+
+Currently accepted commands are:
+
+:quit | :q  = quit winks
 
 - - - - -
 

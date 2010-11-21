@@ -69,20 +69,24 @@ public class winks: Window {
         this.web_view.load_committed.connect ((source, frame) => {
             this.url_bar.text = frame.get_uri ();
         });
+        this.web_view.new_window_policy_decision_requested.connect (
+        (source, frame, request, action, decision) => {
+            this.status_bar.set_text ("New Window Requested | "+VERSION_STRING);
+            this.web_view.open (request.get_uri ());
+            return true;
+        });
         this.scrolled_window.set_events(Gdk.EventMask.KEY_PRESS_MASK);
         this.scrolled_window.key_press_event.connect(ProcessKeyPress);
     }
 
     private bool ProcessKeyPress( Gdk.EventKey KeyPressed ) {
         string performed_action = "";
-        switch (KeyPressed.str) {
-            case "r":
+        switch (KeyPressed.str.up ()) {
             case "R":
                 this.web_view.reload ();
                 performed_action = "Page reloaded";
             break;
 
-            case "b":
             case "B":
                 if (this.web_view.can_go_back ()){
                     this.web_view.go_back ();
@@ -90,7 +94,6 @@ public class winks: Window {
                 }
             break;
 
-            case "f":
             case "F":
                 if (this.web_view.can_go_forward ()){
                     this.web_view.go_forward ();
@@ -98,23 +101,20 @@ public class winks: Window {
                 }
             break;
 
-            case "h":
             case "H":
                 this.web_view.open (winks.HOME_URL);
                 performed_action = "Homepage Loaded";                
             break;
 
-            case "u":
             case "U":
                 this.url_bar.grab_focus ();
                 performed_action = "Edit URL and hit Enter";
             break;
 
-            case "i":
             case "I":
                 this.url_bar.text = "";
                 this.url_bar.grab_focus ();
-                performed_action = "Type URL and hit Enter";
+                performed_action = "Type Command/URL and hit Enter";
             break;
         }
         if (performed_action.length > 0)
@@ -124,14 +124,29 @@ public class winks: Window {
 
     private void on_activate () {
         var url = this.url_bar.text;
-        if (!this.protocol_regex.match (url)) {
-            if (!this.search_check_regex.match (url)) {
-                url = "http://www.google.co.uk/search?q="+url;
-            } else {
-                url = "%s://%s".printf (winks.DEFAULT_PROTOCOL, url); 
-            }
-        } 
-        this.web_view.open (url);
+        // Check for a command
+        if (url.substring(0,1) == ":") {
+            ProcessCommand (url);
+        } else {
+            if (!this.protocol_regex.match (url)) {
+                if (!this.search_check_regex.match (url)) {
+                    url = "http://www.google.co.uk/search?q="+url;
+                } else {
+                    url = "%s://%s".printf (winks.DEFAULT_PROTOCOL, url); 
+                }
+            } 
+            this.web_view.open (url);
+        }
+        this.scrolled_window.grab_focus ();
+    }
+
+    public void ProcessCommand (string PassedCmd) {
+        switch (PassedCmd) {
+            case ":quit":
+            case ":q":
+                Gtk.main_quit ();
+            break;
+        }
     }
 
     public void start (string passed_url) {
