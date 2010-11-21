@@ -28,11 +28,19 @@ public class winks: Window {
         this.title = winks.TITLE;
         set_default_size (1024, 768);
 
+        // Setup required Regex objects
         try {
             this.protocol_regex = new Regex (".*://.*");
             this.search_check_regex = new Regex (".*[.].*");
         } catch (RegexError e) {
             critical ("%s", e.message);
+        }
+
+        // Load icon for Application
+        try {
+            this.icon = new Gdk.Pixbuf.from_file ("winks.png");
+        } catch (Error e) {
+            stderr.printf ("Could not load application icon: %s\n", e.message);
         }
 
         create_widgets ();
@@ -50,8 +58,7 @@ public class winks: Window {
         this.status_bar.xalign = 1;
         this.status_bar.xpad = 5;
         this.status_bar.set_single_line_mode (true);
-        this.url_bar.set_width_chars (50);
-        var top_bar = new HBox (false, 0);
+        var top_bar = new HBox (true, 0);
         top_bar.add (this.url_bar);
         top_bar.add (this.status_bar);
         var main_area = new VBox (false, 0);
@@ -128,6 +135,7 @@ public class winks: Window {
         if (url.substring(0,1) == ":") {
             ProcessCommand (url);
         } else {
+            // we have a url or search
             if (!this.protocol_regex.match (url)) {
                 if (!this.search_check_regex.match (url)) {
                     url = "http://www.google.co.uk/search?q="+url;
@@ -145,6 +153,10 @@ public class winks: Window {
             case ":quit":
             case ":q":
                 Gtk.main_quit ();
+            break;
+
+            default:
+                this.status_bar.set_text ("'"+PassedCmd+"' Unknown Command | "+VERSION_STRING);
             break;
         }
     }
