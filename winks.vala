@@ -207,6 +207,7 @@ public class winks: Window {
 		} else {
 			this.web_view.open (winks.HOME_URL);
 		}
+		this.scrolled_window.grab_focus ();
 	}
 
 	public static int main (string[] args) {
