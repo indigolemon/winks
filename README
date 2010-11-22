@@ -27,8 +27,7 @@ In the project folder, simply run:
 
 It is strongly suggested you place winks somewhere in your
 path, as this is required for multiwindow support to function
-correctly if you have placed it in your path. Once this is
-done, it can be run using 'winks'.
+correctly. Once this is done, it can be run by typing 'winks'.
 
 Optionally, you may pass a url as an argument. Note that
 this url must be complete for this to work.
