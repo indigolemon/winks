@@ -103,6 +103,16 @@ public class winks: Window {
 			}
 			return true;
 		});
+		this.web_view.load_started.connect ((source, frame) => {
+			this.url_bar.set_progress_fraction (0.0);
+		});
+		this.web_view.load_progress_changed.connect ((source, progress) => {
+			string the_progress = ("0."+progress.to_string ()).substring(0,3);
+			this.url_bar.set_progress_fraction (the_progress.to_double ());
+		});
+		this.web_view.load_finished.connect ((source, frame) => {
+			this.url_bar.set_progress_fraction (0.0);
+		});
 		this.scrolled_window.set_events(Gdk.EventMask.KEY_PRESS_MASK);
 		this.scrolled_window.key_press_event.connect(ProcessKeyPress);
 	}
