@@ -17,11 +17,7 @@ See COPYING
   Compiling:
 =====================================
 
-Use the following:
-
-  valac --pkg gtk+-2.0 --pkg webkit-1.0 --thread winks.vala
-
-or in the project folder, simply run:
+In the project folder, simply run:
 
   ./build
 
@@ -29,10 +25,13 @@ or in the project folder, simply run:
   Usage:
 =====================================
 
-Start the application by running ./winks, or simply winks
-if you have placed it in your path. Optionally, you may
-pass a url as an argument. Note that this url must be 
-complete for this to work.
+It is strongly suggested you place winks somewhere in your
+path, as this is required for multiwindow support to function
+correctly if you have placed it in your path. Once this is
+done, it can be run using 'winks'.
+
+Optionally, you may pass a url as an argument. Note that
+this url must be complete for this to work.
 
 Basic usage (case insensitive):
 
@@ -48,6 +47,8 @@ commands. Commands are prefixed by a colon (:).
 Currently accepted commands are:
 
 :quit | :q  = quit winks
+:new  | :n  = open a new window*
+    *This can optionally be passed a URL
 
 - - - - -
 
