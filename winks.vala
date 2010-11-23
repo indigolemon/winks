@@ -9,17 +9,20 @@
 using Gtk;
 using GLib;
 using WebKit;
+using Soup;
 
 public class winks: Window {
 
 	private const string TITLE = "winks";
 	private const string HOME_URL = "http://www.google.co.uk/";
 	private const string DEFAULT_PROTOCOL = "http";
-	private const string VERSION_STRING = "Winks 0.01a";
+	private const string VERSION_STRING = "Winks 0.01";
 
 	private Regex protocol_regex;
 	private Regex search_check_regex;
 
+	private Session my_session;
+	private CookieJarText http_cookies;
 	private Entry url_bar;
 	private WebView web_view;
 	private WebSettings web_settings;
@@ -51,13 +54,29 @@ public class winks: Window {
 					stderr.printf ("Could not create config dir: %s\n", e.message);
 				}
 			}
-			this.icon = new Gdk.Pixbuf.from_file (icon_file.get_path());
+			this.icon = new Gdk.Pixbuf.from_file (icon_file.get_path ());
 		} catch (Error e) {
 			stderr.printf ("Could not load application icon: %s\n", e.message);
 		}
 
+		// Load/Create storage for cookies
+		var cookie_file = File.new_for_path (Environment.get_home_dir ()+"/.config/winks/cookies.txt");
+		if (!cookie_file.query_exists ()) {
+			try {
+				cookie_file.create (FileCreateFlags.NONE);
+			} catch (Error e) {
+				stderr.printf ("Could not create cookie jar: %s\n", e.message);
+			}
+		}
+		this.http_cookies = new CookieJarText (cookie_file.get_path (), false);
+
 		create_widgets ();
 		connect_signals ();
+
+    // Session stuff (think this may be required for cookies)
+    this.my_session = get_default_session ();
+		this.http_cookies.attach (this.my_session);
+
 		this.url_bar.grab_focus ();
 	}
 
@@ -173,7 +192,9 @@ public class winks: Window {
 				} else {
 					url = "%s://%s".printf (winks.DEFAULT_PROTOCOL, url);
 				}
-			} 
+			}
+			//SoupAuthDialog auth_dialog;
+			//auth_dialog.attach (this.my_session);
 			this.web_view.open (url);
 		}
 		this.scrolled_window.grab_focus ();
