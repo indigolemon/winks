@@ -73,8 +73,8 @@ public class winks: Window {
 		create_widgets ();
 		connect_signals ();
 
-    // Session stuff (required for cookies)
-    this.my_session = get_default_session ();
+		// Session stuff (required for cookies)
+		this.my_session = get_default_session ();
 		this.http_cookies.attach (this.my_session);
 
 		this.url_bar.grab_focus ();
@@ -202,8 +202,8 @@ public class winks: Window {
 				print ("Found Cookie: %s\n", found_cookie);
 				message.request_headers.append("Cookie", found_cookie);
 			} else {
-        print ("No Cookie for: %s\n", url);
-      }
+				print ("No Cookie for: %s\n", url);
+			}
 			this.my_session.send_message (message);
 
 			// now open the url
@@ -246,32 +246,32 @@ public class winks: Window {
 	public void start (string passed_url) {
 		show_all ();
 		if (this.protocol_regex.match (passed_url)) {
-      // try some session stuff here
-      var message = new Soup.Message ("GET", passed_url);
-      // Find out if we have a cookie for this request
-      string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
+			// try some session stuff here
+			var message = new Soup.Message ("GET", passed_url);
+			// Find out if we have a cookie for this request
+			string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
 			if (found_cookie != null) {
-	      print ("Found Cookie: %s\n", found_cookie);
-		    message.request_headers.append("Cookie", found_cookie);
-      } else {
-        print ("No Cookie for: %s\n", passed_url);
-      }
-      this.my_session.send_message (message);
-      // now open the url
-      this.web_view.load_html_string ((string)message.response_body.data, passed_url);
+				print ("Found Cookie: %s\n", found_cookie);
+				message.request_headers.append("Cookie", found_cookie);
+			} else {
+				print ("No Cookie for: %s\n", passed_url);
+			}
+			this.my_session.send_message (message);
+			// now open the url
+			this.web_view.load_html_string ((string)message.response_body.data, passed_url);
 		} else {
 			// try some session stuff here
-      var message = new Soup.Message ("GET", winks.HOME_URL);
-      // Find out if we have a cookie for this request
-      string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
+			var message = new Soup.Message ("GET", winks.HOME_URL);
+			// Find out if we have a cookie for this request
+			string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
 			if (found_cookie != null) {
-	      print ("Found Cookie: %s\n", found_cookie);
-		    message.request_headers.append("Cookie", found_cookie);
+				print ("Found Cookie: %s\n", found_cookie);
+				message.request_headers.append("Cookie", found_cookie);
 			} else {
 				print ("No Cookie for: %s\n", winks.HOME_URL);
 			}
-      this.my_session.send_message (message);
-      // now open the url
+			this.my_session.send_message (message);
+			// now open the url
 
 			this.web_view.load_html_string ((string)message.response_body.data,winks.HOME_URL);
 		}
