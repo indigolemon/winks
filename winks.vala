@@ -73,7 +73,7 @@ public class winks: Window {
 		create_widgets ();
 		connect_signals ();
 
-    // Session stuff (think this may be required for cookies)
+    // Session stuff (required for cookies)
     this.my_session = get_default_session ();
 		this.http_cookies.attach (this.my_session);
 
@@ -193,9 +193,21 @@ public class winks: Window {
 					url = "%s://%s".printf (winks.DEFAULT_PROTOCOL, url);
 				}
 			}
-			//SoupAuthDialog auth_dialog;
-			//auth_dialog.attach (this.my_session);
-			this.web_view.open (url);
+
+			// try some session stuff here
+			var message = new Soup.Message ("GET", url);
+			// Find out if we have a cookie for this request
+			string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
+			if (found_cookie != null) {
+				print ("Found Cookie: %s\n", found_cookie);
+				message.request_headers.append("Cookie", found_cookie);
+			} else {
+        print ("No Cookie for: %s\n", url);
+      }
+			this.my_session.send_message (message);
+
+			// now open the url
+			this.web_view.load_html_string ((string)message.response_body.data, url);
 		}
 		this.scrolled_window.grab_focus ();
 	}
@@ -234,9 +246,34 @@ public class winks: Window {
 	public void start (string passed_url) {
 		show_all ();
 		if (this.protocol_regex.match (passed_url)) {
-			this.web_view.open (passed_url);
+      // try some session stuff here
+      var message = new Soup.Message ("GET", passed_url);
+      // Find out if we have a cookie for this request
+      string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
+			if (found_cookie != null) {
+	      print ("Found Cookie: %s\n", found_cookie);
+		    message.request_headers.append("Cookie", found_cookie);
+      } else {
+        print ("No Cookie for: %s\n", passed_url);
+      }
+      this.my_session.send_message (message);
+      // now open the url
+      this.web_view.load_html_string ((string)message.response_body.data, passed_url);
 		} else {
-			this.web_view.open (winks.HOME_URL);
+			// try some session stuff here
+      var message = new Soup.Message ("GET", winks.HOME_URL);
+      // Find out if we have a cookie for this request
+      string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
+			if (found_cookie != null) {
+	      print ("Found Cookie: %s\n", found_cookie);
+		    message.request_headers.append("Cookie", found_cookie);
+			} else {
+				print ("No Cookie for: %s\n", winks.HOME_URL);
+			}
+      this.my_session.send_message (message);
+      // now open the url
+
+			this.web_view.load_html_string ((string)message.response_body.data,winks.HOME_URL);
 		}
 		this.scrolled_window.grab_focus ();
 	}
