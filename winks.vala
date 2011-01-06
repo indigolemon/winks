@@ -12,15 +12,18 @@ using WebKit;
 using Soup;
 
 public class winks: Window {
-
+	// constants
 	private const string TITLE = "winks";
 	private const string HOME_URL = "http://www.google.co.uk/";
 	private const string DEFAULT_PROTOCOL = "http";
 	private const string VERSION_STRING = "Winks 0.01";
 
+	// regex required
 	private Regex protocol_regex;
 	private Regex search_check_regex;
 
+	// variables used globally
+	private int zoom_level;
 	private Session my_session;
 	private CookieJarText http_cookies;
 	private Entry url_bar;
@@ -29,6 +32,7 @@ public class winks: Window {
 	private Label status_bar;
 	private ScrolledWindow scrolled_window;
 
+	// constructor
 	public winks () {
 		this.title = winks.TITLE;
 		set_default_size (1024, 768);
@@ -77,9 +81,14 @@ public class winks: Window {
 		this.my_session = get_default_session ();
 		this.http_cookies.attach (this.my_session);
 
+		// zoom indicator
+		this.zoom_level = 0;
+
+		// move focus onto the url bar
 		this.url_bar.grab_focus ();
 	}
 
+	// draw what we need
 	private void create_widgets () {
 		this.url_bar = new Entry ();
 		this.web_settings = new WebSettings ();
@@ -103,6 +112,7 @@ public class winks: Window {
 		add (main_area);
 	}
 
+	// deal with signals
 	private void connect_signals () {
 		this.destroy.connect (Gtk.main_quit);
 		this.url_bar.activate.connect (on_activate);
@@ -113,15 +123,31 @@ public class winks: Window {
 			this.url_bar.text = frame.get_uri ();
 		});
 		this.web_view.new_window_policy_decision_requested.connect (
-		(source, frame, request, action, decision) => {
-			this.status_bar.set_text ("Opening New Window | "+VERSION_STRING);
-			try {
-				GLib.Process.spawn_command_line_async ("winks "+request.get_uri ());
-			} catch (GLib.SpawnError e) {
-				stderr.printf ("Could not spawn new process: %s\n", e.message);
+			(source, frame, request, action, decision) => {
+				this.status_bar.set_text ("Opening New Window | "+VERSION_STRING);
+				try {
+					GLib.Process.spawn_command_line_async ("winks "+request.get_uri ());
+				} catch (GLib.SpawnError e) {
+					stderr.printf ("Could not spawn new process: %s\n", e.message);
+				}
+				return true;
 			}
-			return true;
-		});
+		);
+		this.web_view.navigation_policy_decision_requested.connect (
+			(source, frame, request, action, decision) => {
+				// Find out if we have a cookie for this request
+				string found_cookie = this.http_cookies.get_cookies(request.message.get_uri(), true);
+				if (found_cookie != null) {
+					print ("Found Cookie: %s\n", found_cookie);
+					request.message.request_headers.append("Cookie", found_cookie);
+				} else {
+					print ("No Cookie for: %s\n", request.get_uri ());
+				}
+				// return true
+				decision.use ();
+				return true;
+			}	
+		);
 		this.web_view.load_started.connect ((source, frame) => {
 			this.url_bar.set_progress_fraction (0.0);
 		});
@@ -136,6 +162,7 @@ public class winks: Window {
 		this.scrolled_window.key_press_event.connect(ProcessKeyPress);
 	}
 
+	// process key presses
 	private bool ProcessKeyPress( Gdk.EventKey KeyPressed ) {
 		string performed_action = "";
 		switch (KeyPressed.str.up ()) {
@@ -173,12 +200,44 @@ public class winks: Window {
 				this.url_bar.grab_focus ();
 				performed_action = "Type Command/URL and hit Enter";
 			break;
+			
+			case "A":
+				this.web_view.zoom_in ();
+				this.zoom_level = (this.zoom_level + 1);
+				performed_action = "Zoomed In (Level: "+this.zoom_level.to_string ()+")";
+			break;
+			
+			case "Z":
+				this.web_view.zoom_out ();
+				this.zoom_level = (this.zoom_level - 1);
+				performed_action = "Zoomed Out (Level: "+this.zoom_level.to_string ()+")";
+			break;
 		}
 		if (performed_action.length > 0)
 			this.status_bar.set_text (performed_action+" | "+VERSION_STRING);
 		return true;
 	}
 
+	// load a url using soup
+	private void load_url (string url) {
+		// try some session stuff here
+		var message = new Soup.Message ("GET", url);
+		// Find out if we have a cookie for this request
+		string found_cookie = this.http_cookies.get_cookies(message.get_uri(), true);
+		if (found_cookie != null) {
+			print ("Found Cookie: %s\n", found_cookie);
+			message.request_headers.append("Cookie", found_cookie);
+		} else {
+			print ("No Cookie for: %s\n", url);
+		}
+		this.my_session.send_message (message);
+
+		// now open the url
+		this.web_view.load_html_string ((string)message.response_body.data, url);
+		this.web_view.open (url);
+	}
+
+	// deal with someone activating the url/command bar
 	private void on_activate () {
 		var url = this.url_bar.text;
 		// Check for a command
@@ -193,25 +252,13 @@ public class winks: Window {
 					url = "%s://%s".printf (winks.DEFAULT_PROTOCOL, url);
 				}
 			}
-
-			// try some session stuff here
-			var message = new Soup.Message ("GET", url);
-			// Find out if we have a cookie for this request
-			string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
-			if (found_cookie != null) {
-				print ("Found Cookie: %s\n", found_cookie);
-				message.request_headers.append("Cookie", found_cookie);
-			} else {
-				print ("No Cookie for: %s\n", url);
-			}
-			this.my_session.send_message (message);
-
-			// now open the url
-			this.web_view.load_html_string ((string)message.response_body.data, url);
+			// load the url
+			load_url (url);
 		}
 		this.scrolled_window.grab_focus ();
 	}
 
+	// process a command
 	public void ProcessCommand (string PassedCmd) {
 		string[] command_and_args = PassedCmd.split(" ");
 		string the_command = command_and_args[0];
@@ -243,41 +290,20 @@ public class winks: Window {
 		}
 	}
 
+	// start the ball rolling
 	public void start (string passed_url) {
 		show_all ();
 		if (this.protocol_regex.match (passed_url)) {
-			// try some session stuff here
-			var message = new Soup.Message ("GET", passed_url);
-			// Find out if we have a cookie for this request
-			string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
-			if (found_cookie != null) {
-				print ("Found Cookie: %s\n", found_cookie);
-				message.request_headers.append("Cookie", found_cookie);
-			} else {
-				print ("No Cookie for: %s\n", passed_url);
-			}
-			this.my_session.send_message (message);
-			// now open the url
-			this.web_view.load_html_string ((string)message.response_body.data, passed_url);
+			//load the passed url
+			load_url (passed_url);
 		} else {
-			// try some session stuff here
-			var message = new Soup.Message ("GET", winks.HOME_URL);
-			// Find out if we have a cookie for this request
-			string found_cookie = this.http_cookies.get_cookies(message.get_uri(), false);
-			if (found_cookie != null) {
-				print ("Found Cookie: %s\n", found_cookie);
-				message.request_headers.append("Cookie", found_cookie);
-			} else {
-				print ("No Cookie for: %s\n", winks.HOME_URL);
-			}
-			this.my_session.send_message (message);
-			// now open the url
-
-			this.web_view.load_html_string ((string)message.response_body.data,winks.HOME_URL);
+			//load the homepage
+			load_url (winks.HOME_URL);
 		}
 		this.scrolled_window.grab_focus ();
 	}
 
+	// main function
 	public static int main (string[] args) {
 		Gtk.init (ref args);
 
