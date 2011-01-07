@@ -83,6 +83,8 @@ public class winks: Window {
 
 		// zoom indicator
 		this.zoom_level = 0;
+		// zoom type
+		this.web_view.set_full_content_zoom (true);
 
 		// move focus onto the url bar
 		this.url_bar.grab_focus ();
